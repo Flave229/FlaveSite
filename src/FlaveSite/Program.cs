@@ -8,14 +8,9 @@ namespace FlaveSite
     {
         public static void Main(string[] args)
         {
-            var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("hosting.json", optional: true)
-                .Build();
-
             var host = new WebHostBuilder()
                 .UseKestrel()
-                .UseConfiguration(config)
+                .UseUrls("http://127.0.0.1:5123")
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseStartup<Startup>()
                 .Build();
