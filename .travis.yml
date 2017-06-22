@@ -1,3 +1,4 @@
 language: csharp
+dist: trusty
 solution: FlaveSite.sln
-dotnet: 1.0.0
+dotnet: 1.0.0-preview2-003131
