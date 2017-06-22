@@ -1,0 +1,3 @@
+language: csharp
+solution: FlaveSite.sln
+dotnet: 1.0.0
