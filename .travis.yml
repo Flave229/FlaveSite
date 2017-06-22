@@ -1,4 +1,7 @@
 language: csharp
 dist: trusty
-solution: FlaveSite.sln
+sudo: required
+mono: none
 dotnet: 1.0.0-preview2-003131
+script:
+    ./scripts/build.sh
