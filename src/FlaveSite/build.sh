@@ -1,1 +1,1 @@
-dotnet restore && dotnet build ./src/FlaveSite/projects.json
+dotnet restore && dotnet build ./src/FlaveSite/project.json
