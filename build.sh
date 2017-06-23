@@ -1,1 +1,0 @@
-dotnet restore ./src/FlaveSite && dotnet build ./src/FlaveSite
