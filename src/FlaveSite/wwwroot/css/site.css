@@ -36,3 +36,26 @@ textarea {
     display: none
   }
 }
+
+.header-content {
+    height: 600px; 
+    background-image: url(https://timenewsfeed.files.wordpress.com/2013/10/screen-shot-2013-10-09-at-4-10-39-pm.png?w=753);
+    -ms-background-repeat: no-repeat;
+    background-repeat: no-repeat;
+    -ms-background-size: cover;
+    background-size: cover;
+    position: relative;
+    filter: grayscale(1);
+}
+
+.header-content:before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #141414;
+    background: rgba(20, 20, 20, 0.5);
+}

@@ -16,6 +16,7 @@
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
     </environment>
     @Html.ApplicationInsightsJavaScript(TelemetryConfiguration)
+
 </head>
 <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -38,11 +39,12 @@
             </div>
         </div>
     </div>
-    <div class="container body-content">
         @RenderBody()
-        <hr />
+    <hr />
+
+    <div class="container body-content">
         <footer>
-            <p>&copy; 2017 - FlaveSite</p>
+            <p>&copy; @DateTime.Today.Year - FlaveSite</p>
         </footer>
     </div>
 
