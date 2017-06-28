@@ -6,11 +6,7 @@ namespace FlaveSite.Controllers
     {
         public IActionResult Index()
         {
-            return View("IndexOld");
-        }
-
-        public IActionResult Testing()
-        {
+            ViewData["Title"] = "This is what I get up to.";
             return View("Index");
         }
 
