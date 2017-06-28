@@ -48,7 +48,7 @@ textarea {
 .header-background {
     height: 600px;
     width: 100%;
-    background-image: url(https://timenewsfeed.files.wordpress.com/2013/10/screen-shot-2013-10-09-at-4-10-39-pm.png?w=753);
+    background-image: url(../images/header-background.png);
     -ms-background-repeat: no-repeat;
     background-repeat: no-repeat;
     -ms-background-size: cover;
