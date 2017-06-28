@@ -40,8 +40,8 @@ textarea {
 
 @font-face {
     font-family: 'league_spartanregular';
-    src: url('../fonts/leaguespartan-bold-webfont.woff2') format('woff2'),
-         url('../fonts/leaguespartan-bold-webfont.woff') format('woff');
+    src: url('/fonts/leaguespartan-bold-webfont.woff2') format('woff2'),
+         url('/fonts/leaguespartan-bold-webfont.woff') format('woff');
     font-weight: normal;
     font-style: normal;
 }
@@ -49,7 +49,7 @@ textarea {
 .header-background {
     height: 600px;
     width: 100%;
-    background-image: url(../images/header-background.png);
+    background-image: url(/images/header-background.png);
     -ms-background-repeat: no-repeat;
     background-repeat: no-repeat;
     -ms-background-size: cover;
@@ -80,7 +80,7 @@ textarea {
 }
 
 .header-profile-image {
-    background-image: url(../images/header-profile-image.png);
+    background-image: url(/images/header-profile-image.png);
     -ms-background-repeat: no-repeat;
     background-repeat: no-repeat;
     -ms-background-size: cover;
