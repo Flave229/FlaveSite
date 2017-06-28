@@ -37,20 +37,21 @@ textarea {
   }
 }
 
-.header-content {
-    height: 600px; 
+.header-background {
+    height: 600px;
+    width: 100%;
     background-image: url(https://timenewsfeed.files.wordpress.com/2013/10/screen-shot-2013-10-09-at-4-10-39-pm.png?w=753);
     -ms-background-repeat: no-repeat;
     background-repeat: no-repeat;
     -ms-background-size: cover;
     background-size: cover;
-    position: relative;
+    position: absolute;
+    z-index: 0;
     filter: grayscale(1);
 }
 
-.header-content:before {
+.header-background:before {
     content: "";
-    display: block;
     position: absolute;
     top: 0;
     bottom: 0;
@@ -58,4 +59,24 @@ textarea {
     right: 0;
     background: #141414;
     background: rgba(20, 20, 20, 0.5);
+}
+
+.header-content {
+    height: 600px;
+    padding-top: 200px; 
+}
+
+.header-profile {
+    text-align: center;
+}
+
+.header-profile-image {
+    background-image: url(../images/header-profile-image.png);
+    -ms-background-repeat: no-repeat;
+    background-repeat: no-repeat;
+    -ms-background-size: cover;
+    background-size: cover;
+    margin: auto;
+    height: 200px; 
+    width: 200px;
 }
