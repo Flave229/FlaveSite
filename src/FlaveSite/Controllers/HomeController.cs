@@ -1,12 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using FlaveSite.Core.Projects;
+using Microsoft.AspNetCore.Mvc;
 
 namespace FlaveSite.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly ProjectRepository _projectRepository;
+
+        public HomeController(ProjectRepository projectRepository)
+        {
+            _projectRepository = projectRepository;    
+        }
+
         public IActionResult Index()
         {
             ViewData["Title"] = "This is what I get up to.";
+
+            _projectRepository.GetProgrammingLanguages();
 
             return View("Index");
         }
