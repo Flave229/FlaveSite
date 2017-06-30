@@ -7,6 +7,7 @@ namespace FlaveSite.Controllers
         public IActionResult Index()
         {
             ViewData["Title"] = "This is what I get up to.";
+
             return View("Index");
         }
 
