@@ -1,4 +1,5 @@
-﻿<div class="header-background"></div>
+﻿@Html.Partial("Navbar")
+<div class="header-background"></div>
 <div class="header-content">
     <div class="row" style="top: 50%">
         <div class="col-md-4"></div>
@@ -14,3 +15,5 @@
 <div class="container body-content">
     <h2>@ViewData["Title"]</h2>
 </div>
+
+@Html.Partial("MainFooter")

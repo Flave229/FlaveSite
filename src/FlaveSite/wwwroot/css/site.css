@@ -96,3 +96,30 @@ textarea {
     font-size: 30px;
     color: #ffffff;
 }
+
+.sideNavigationMenu {
+    height: 100%;
+    width: 70px;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    padding-top: 30px;
+}
+
+.sideNavigationMenu a {
+    margin-top: 30px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 10px;
+    color: #818181;
+    display: block;
+}
+
+.sideNavigationMenu i {
+    font-size: 30px;
+    color: #818181;
+    display: block;
+}
