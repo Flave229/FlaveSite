@@ -44,8 +44,8 @@ namespace FlaveSite
 
         private void RegisterApplicationServices(IServiceCollection services)
         {
-            services.AddScoped<ProjectRepository>();
             services.AddTransient<ProjectRepository>();
+            services.AddTransient<ProjectService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

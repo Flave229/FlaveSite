@@ -1,4 +1,4 @@
-﻿@Model 
+﻿@using FlaveSite.Core.Projects
 
 @Html.Partial("Partials/SideNavigationMenu")
 
@@ -6,7 +6,29 @@
     <div class="row">
         <div class="col-md-12">
             <div class="panel panel-primary admin-panel">
-                <span> Add New Project</span>
+                <h4> Add New Project</h4>
+                
+                @using (Html.BeginForm("AddProject", "Admin", FormMethod.Post, new {id = "addProjectForm", @class = "form-group"}))
+                {
+                    var addProjectRequest = new AddProjectRequest();
+                    <div class="row">
+                        <div class="col-sm-1">
+                            @Html.LabelFor(x => addProjectRequest.Title, new { @class = "admin-panel-form-label"})
+                        </div>
+                        <div class="col-sm-11">
+                            @Html.TextBoxFor(x => addProjectRequest.Title, new { @class = "form-control admin-panel-form-input" })
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-1">
+                            @Html.LabelFor(x => addProjectRequest.Description, new { @class = "admin-panel-form-label" })
+                        </div>
+                        <div class="col-sm-11">
+                            @Html.TextAreaFor(x => addProjectRequest.Description, new { @class = "form-control admin-panel-form-input" })
+                        </div>
+                    </div>
+                }
+
             </div>
         </div>
     </div>
