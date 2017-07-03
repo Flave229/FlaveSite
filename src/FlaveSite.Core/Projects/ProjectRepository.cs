@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Npgsql;
 
 namespace FlaveSite.Core.Projects
@@ -10,7 +9,6 @@ namespace FlaveSite.Core.Projects
 
         public ProjectRepository()
         {
-            var executedDirectory = System.Reflection.Assembly.GetEntryAssembly();
             var connectionString = File.ReadAllText("./wwwroot/config/LIVEConnectionString.config");
             _connection = new NpgsqlConnection(connectionString);
         }
