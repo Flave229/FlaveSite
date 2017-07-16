@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using FlaveSite.Core.Projects.Records;
 
 namespace FlaveSite.Core.Projects
 {
@@ -16,6 +16,11 @@ namespace FlaveSite.Core.Projects
         public void AddProject(AddProjectRequest request)
         {
             _repository.AddProject(request);
+        }
+
+        public List<ProjectRecord> GetProjects()
+        {
+            return _repository.GetProjects();
         }
     }
 

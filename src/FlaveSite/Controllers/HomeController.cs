@@ -5,20 +5,20 @@ namespace FlaveSite.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ProjectRepository _projectRepository;
+        private readonly ProjectService _projectService;
 
-        public HomeController(ProjectRepository projectRepository)
+        public HomeController(ProjectService projectService)
         {
-            _projectRepository = projectRepository;    
+            _projectService = projectService;
         }
 
         public IActionResult Index()
         {
             ViewData["Title"] = "This is what I get up to.";
 
-            _projectRepository.GetProgrammingLanguages();
+            var projects = _projectService.GetProjects();
 
-            return View("Index");
+            return View("Index", projects);
         }
 
         public IActionResult About()

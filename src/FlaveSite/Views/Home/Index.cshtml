@@ -1,4 +1,6 @@
-﻿@Html.Partial("Navbar")
+﻿@model List<FlaveSite.Core.Projects.Records.ProjectRecord>
+
+@Html.Partial("Navbar")
 <div class="header-background"></div>
 <div class="header-content">
     <div class="row" style="top: 50%">
@@ -14,6 +16,18 @@
 
 <div class="container body-content">
     <h2>@ViewData["Title"]</h2>
+    
+    @foreach (var project in Model)
+    {
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-primary admin-panel">
+                    <h4> @project.Title</h4>
+
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @Html.Partial("MainFooter")

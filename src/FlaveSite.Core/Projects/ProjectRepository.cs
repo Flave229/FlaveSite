@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
+using FlaveSite.Core.Projects.Records;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -49,6 +51,42 @@ namespace FlaveSite.Core.Projects
                 command = new NpgsqlCommand($"INSERT INTO projectTeamMembersLinker (projectId, authorId) VALUES ({projectId}, {teamMemberId}");
                 command.ExecuteNonQuery();
             }
+        }
+
+        public List<ProjectRecord> GetProjects()
+        {
+            _connection.Open();
+
+            const string query = @"SELECT 
+                                        Projects.id,
+                                        Projects.title,
+                                        Projects.description,
+                                        Projects.date,
+                                        Authors.firstname,
+                                        Authors.lastname
+                                    FROM Projects
+                                    LEFT JOIN Authors ON Authors.id = Projects.authorId";
+            var command = new NpgsqlCommand(query, _connection);
+
+            var reader = command.ExecuteReader();
+
+            var projects = new List<ProjectRecord>();
+
+            while (reader.Read())
+            {
+                var project = new ProjectRecord
+                {
+                    Id = reader.GetInt32(0),
+                    Title = reader.GetString(1),
+                    Description = reader.GetString(2),
+                    Date = reader.GetDateTime(3),
+                    Author = reader.GetString(4) + " " + reader.GetString(5)
+                };
+
+                projects.Add(project);
+            }
+
+            return projects;
         }
     }
 }
