@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace FlaveSite.Core.Projects
 {
@@ -32,7 +33,8 @@ namespace FlaveSite.Core.Projects
         {
             _connection.Open();
 
-            var command = new NpgsqlCommand($"INSERT INTO projects (title, description, date, authorid) VALUES ({request.Title}, {request.Description}, {request.Date}, {request.AuthorId})");
+            var command = new NpgsqlCommand($"INSERT INTO projects (title, description, date, authorid) VALUES ('{request.Title}', '{request.Description}', @date, 1) RETURNING id", _connection);
+            command.Parameters.AddWithValue("@date", NpgsqlDbType.Date, request.Date);
             var reader = command.ExecuteReader();
 
             var projectId = 0;

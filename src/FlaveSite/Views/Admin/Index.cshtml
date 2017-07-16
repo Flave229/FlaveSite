@@ -10,22 +10,34 @@
                 
                 @using (Html.BeginForm("AddProject", "Admin", FormMethod.Post, new {id = "addProjectForm", @class = "form-group"}))
                 {
-                    var addProjectRequest = new AddProjectRequest();
                     <div class="row">
                         <div class="col-sm-1">
-                            @Html.LabelFor(x => addProjectRequest.Title, new { @class = "admin-panel-form-label"})
+                            @Html.Label("Title", "Title", new { @class = "form-label admin-panel-form-label"})
                         </div>
                         <div class="col-sm-11">
-                            @Html.TextBoxFor(x => addProjectRequest.Title, new { @class = "form-control admin-panel-form-input" })
+                            @Html.TextBox("Title", null, new { @class = "form-control admin-panel-form-input" })
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-sm-1">
-                            @Html.LabelFor(x => addProjectRequest.Description, new { @class = "admin-panel-form-label" })
+                            @Html.Label("Description", "Description", new { @class = "form-label admin-panel-form-label" })
                         </div>
                         <div class="col-sm-11">
-                            @Html.TextAreaFor(x => addProjectRequest.Description, new { @class = "form-control admin-panel-form-input" })
+                            @Html.TextArea("Description", null, new { @class = "form-control admin-panel-form-input" })
                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-1">
+                            @Html.Label("Date", "Date", new { @class = "form-label admin-panel-form-label" })
+                        </div>
+                        <div class="col-sm-11">
+                            @Html.TextBox("Date", null, new {@class = "form-control admin-panel-form-input", type = "date"})
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <button class="btn btn-primary" style="float: right" type="submit">Add Project</button>
+                        </div>    
                     </div>
                 }
 

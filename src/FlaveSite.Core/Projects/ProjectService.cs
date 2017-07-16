@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace FlaveSite.Core.Projects
@@ -20,9 +21,14 @@ namespace FlaveSite.Core.Projects
 
     public class AddProjectRequest
     {
+        public AddProjectRequest()
+        {
+            TeamMembers = new List<int>();
+        }
+
         public string Title { get; set; }
         public string Description { get; set; }
-        public string Date { get; set; }
+        public DateTime Date { get; set; }
         public int AuthorId { get; set; }
         public List<int> TeamMembers { get; set; }
     }
