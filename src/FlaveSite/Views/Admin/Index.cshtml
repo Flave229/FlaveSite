@@ -1,4 +1,5 @@
-﻿@Html.Partial("Partials/SideNavigationMenu")
+﻿@model List<FlaveSite.Core.Projects.Records.ProjectRecord>
+@Html.Partial("Partials/SideNavigationMenu")
 
 <div class="admin-content">
     <div class="row">
@@ -46,7 +47,33 @@
     <div class="row">
         <div class="col-md-6">
             <div class="panel panel-primary admin-panel">
-                    <span> Project Edit List</span>
+                <h4> Project Edit List</h4>
+
+                <table class="table table-striped">
+                    <thead>
+                    <tr>
+                        <td>Title</td>
+                        <td>Date</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var project in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @project.Title
+                                </td>
+                                <td>
+                                    @project.Date.ToString("d")
+                                </td>
+                                <td style="text-align: right">
+                                    <i class="fa fa-pencil"></i> <i class="fa fa-trash"></i>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
             </div>
         </div>
         <div class="col-md-6">

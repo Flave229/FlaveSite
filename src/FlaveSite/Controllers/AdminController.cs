@@ -14,7 +14,8 @@ namespace FlaveSite.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var projects = _projectService.GetProjects();
+            return View(projects);
         }
 
         public JsonResult AddProject(AddProjectRequest request)
