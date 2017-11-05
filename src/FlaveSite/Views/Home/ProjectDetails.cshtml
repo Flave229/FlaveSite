@@ -15,26 +15,29 @@
 
 
 <div class="container body-content" style="">
-    <div class="row">
-        @if (Model.Images.Count > 0)
-        {
-            foreach (var image in Model.Images)
-            {
-                 <div class="col-md-2">
-                     <img src="@image"/>
-                 </div>
-             }
-        }
-    </div >
     @if (string.IsNullOrEmpty(Model.VideoUrl) == false)
     {
         <div class="video-container">
             <iframe width="80%" style="min-height: 500px;" src="@Model.VideoUrl">
             </iframe>
         </div>
-        <h2>Description</h2>
-        <span>@Html.Raw(Model.Description)</span>
     }
+
+    <div class="row image-list-container">
+        @if (Model.Images.Count > 0)
+        {
+            <h2>Images</h2>
+            foreach (var image in Model.Images)
+            {
+                <div class="col-md-2">
+                    <img class="image-list-item" src="@image" />
+                </div>
+            }
+        }
+    </div>
+    
+    <h2>Description</h2>
+    <span>@Html.Raw(Model.Description)</span>
 </div>
 
 @Html.Partial("MainFooter")
