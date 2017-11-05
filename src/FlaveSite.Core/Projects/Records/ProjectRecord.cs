@@ -12,6 +12,7 @@ namespace FlaveSite.Core.Projects.Records
         public string Author { get; set; }
         public string ImageUrl { get; set; }
         public List<string> Images { get; internal set; }
+        public string VideoUrl { get; set; }
 
         public ProjectRecord()
         {

@@ -118,7 +118,8 @@ namespace FlaveSite.Core.Projects
                                 Authors.firstname,
                                 Authors.lastname,
                                 Media.url,
-                                Media.isprimary
+                                Media.isprimary,
+                                Media.mediatypeid
                             FROM Projects
                             LEFT JOIN Authors ON Authors.id = Projects.authorId
                             LEFT JOIN Media ON Media.projectid = Projects.id
@@ -146,10 +147,19 @@ namespace FlaveSite.Core.Projects
                     }
 
                     var isprimary = reader[7] != DBNull.Value && reader.GetBoolean(7);
-                    if (isprimary)
+                    var mediaType = reader.GetInt32(8);
+
+                    if (isprimary && mediaType == 1)
                         project.ImageUrl = mediaUrl;
-                    else
-                        project.Images.Add(mediaUrl);
+                    else switch (mediaType)
+                    {
+                        case 1:
+                            project.Images.Add(mediaUrl);
+                            break;
+                        case 2:
+                            project.VideoUrl = mediaUrl;
+                            break;
+                    }
                 }
 
                 reader.Close();
