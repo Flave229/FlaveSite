@@ -59,6 +59,18 @@ textarea {
     filter: grayscale(1);
 }
 
+.header-details {
+    height: 300px;
+    width: 100%;
+    -ms-background-repeat: no-repeat;
+    background-repeat: no-repeat;
+    -ms-background-size: cover;
+    background-size: cover;
+    position: absolute;
+    z-index: 0;
+    filter: grayscale(1);
+}
+
 .header-background:before {
     content: "";
     position: absolute;
@@ -73,6 +85,11 @@ textarea {
 .header-content {
     height: 600px;
     padding-top: 200px; 
+}
+
+.header-details-content {
+    height: 300px;
+    padding-top: 100px;
 }
 
 .header-profile {

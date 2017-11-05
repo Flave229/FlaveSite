@@ -22,6 +22,11 @@ namespace FlaveSite.Core.Projects
         {
             return _repository.GetProjects();
         }
+
+        public ProjectRecord GetProjectDetails(int projectId)
+        {
+            return _repository.GetProjectDetails(projectId);
+        }
     }
 
     public class AddProjectRequest

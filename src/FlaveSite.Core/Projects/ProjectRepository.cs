@@ -58,7 +58,9 @@ namespace FlaveSite.Core.Projects
         {
             _connection.Open();
 
-            const string query = @"SELECT 
+            try
+            {
+                const string query = @"SELECT 
                                         Projects.id,
                                         Projects.title,
                                         Projects.description,
@@ -70,30 +72,93 @@ namespace FlaveSite.Core.Projects
                                     LEFT JOIN Authors ON Authors.id = Projects.authorId
                                     LEFT JOIN Media ON Media.projectid = Projects.id
                                         AND Media.isprimary = true";
-            var command = new NpgsqlCommand(query, _connection);
+                var command = new NpgsqlCommand(query, _connection);
 
-            var reader = command.ExecuteReader();
+                var reader = command.ExecuteReader();
 
-            var projects = new List<ProjectRecord>();
+                var projects = new List<ProjectRecord>();
 
-            while (reader.Read())
-            {
-                var imageUrl = reader[6] == DBNull.Value ? "" : reader.GetString(6);
-
-                var project = new ProjectRecord
+                while (reader.Read())
                 {
-                    Id = reader.GetInt32(0),
-                    Title = reader.GetString(1),
-                    Description = reader.GetString(2),
-                    Date = reader.GetDateTime(3),
-                    Author = reader.GetString(4) + " " + reader.GetString(5),
-                    ImageUrl = imageUrl
-                };
+                    var imageUrl = reader[6] == DBNull.Value ? "" : reader.GetString(6);
 
-                projects.Add(project);
+                    var project = new ProjectRecord
+                    {
+                        Id = reader.GetInt32(0),
+                        Title = reader.GetString(1),
+                        Description = reader.GetString(2),
+                        Date = reader.GetDateTime(3),
+                        Author = reader.GetString(4) + " " + reader.GetString(5),
+                        ImageUrl = imageUrl
+                    };
+
+                    projects.Add(project);
+                }
+
+                reader.Close();
+                return projects;
             }
+            finally
+            {
+                _connection.Close();
+            }
+        }
 
-            return projects;
+        public ProjectRecord GetProjectDetails(int projectId)
+        {
+            _connection.Open();
+
+            try
+            {
+                var query = $@"SELECT 
+                                Projects.id,
+                                Projects.title,
+                                Projects.description,
+                                Projects.date,
+                                Authors.firstname,
+                                Authors.lastname,
+                                Media.url,
+                                Media.isprimary
+                            FROM Projects
+                            LEFT JOIN Authors ON Authors.id = Projects.authorId
+                            LEFT JOIN Media ON Media.projectid = Projects.id
+                            WHERE Projects.id = {projectId}";
+                var command = new NpgsqlCommand(query, _connection);
+
+                var reader = command.ExecuteReader();
+
+                ProjectRecord project = null;
+
+                while (reader.Read())
+                {
+                    var mediaUrl = reader[6] == DBNull.Value ? "" : reader.GetString(6);
+
+                    if (project == null)
+                    {
+                        project = new ProjectRecord
+                        {
+                            Id = reader.GetInt32(0),
+                            Title = reader.GetString(1),
+                            Description = reader.GetString(2),
+                            Date = reader.GetDateTime(3),
+                            Author = reader.GetString(4) + " " + reader.GetString(5)
+                        };
+                    }
+
+                    var isprimary = reader[7] != DBNull.Value && reader.GetBoolean(7);
+                    if (isprimary)
+                        project.ImageUrl = mediaUrl;
+                    else
+                        project.Images.Add(mediaUrl);
+                }
+
+                reader.Close();
+                return project;
+            }
+            finally
+            {
+                _connection.Close();
+            }
         }
     }
 }
