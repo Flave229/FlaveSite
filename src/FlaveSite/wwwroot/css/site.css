@@ -130,9 +130,11 @@ textarea {
 }
 
 .admin-panel {
-    border-color: #337ab7;
+    height: 200px;
+    color: whitesmoke;
+    border-color: grey;
     padding: 5px 5px 5px 20px;
-    background-color: #EFEFEF;
+    background-color: #818181;
 }
 
 .admin-panel-form-label {
