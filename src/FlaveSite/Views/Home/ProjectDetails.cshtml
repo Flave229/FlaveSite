@@ -59,7 +59,15 @@
         <p>
             @foreach (Author teamMember in Model.AdditionalMembers)
             {
-                <a href="@teamMember.Url">@teamMember.Name</a>
+                var portfolioUrl = teamMember.Url;
+                if (string.IsNullOrEmpty(portfolioUrl))
+                {
+                    @teamMember.Name
+                }
+                else
+                {
+                    <a href="@teamMember.Url"> @teamMember.Name </a >
+                }
                 <br/>
             }
         </p>
