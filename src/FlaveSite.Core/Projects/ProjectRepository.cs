@@ -71,7 +71,8 @@ namespace FlaveSite.Core.Projects
                                     FROM Projects
                                     LEFT JOIN Authors ON Authors.id = Projects.authorId
                                     LEFT JOIN Media ON Media.projectid = Projects.id
-                                        AND Media.isprimary = true";
+                                        AND Media.isprimary = true
+                                    ORDER BY Projects.date DESC";
                 var command = new NpgsqlCommand(query, _connection);
 
                 var reader = command.ExecuteReader();
@@ -119,7 +120,8 @@ namespace FlaveSite.Core.Projects
                                 Authors.lastname,
                                 Media.url,
                                 Media.isprimary,
-                                Media.mediatypeid
+                                Media.mediatypeid,
+                                Authors.id
                             FROM Projects
                             LEFT JOIN Authors ON Authors.id = Projects.authorId
                             LEFT JOIN Media ON Media.projectid = Projects.id
@@ -142,6 +144,7 @@ namespace FlaveSite.Core.Projects
                             Title = reader.GetString(1),
                             Description = reader.GetString(2),
                             Date = reader.GetDateTime(3),
+                            AuthorId = reader.GetInt32(9),
                             Author = reader.GetString(4) + " " + reader.GetString(5)
                         };
                     }
@@ -163,6 +166,26 @@ namespace FlaveSite.Core.Projects
                 }
 
                 reader.Close();
+
+                query = $@"SELECT 
+                                Authors.firstname,
+                                Authors.lastname,
+                                Authors.url
+                            FROM ProjectTeamMembersLinker
+                            LEFT JOIN Authors ON Authors.id = ProjectTeamMembersLinker.authorId
+                            WHERE ProjectTeamMembersLinker.projectId = {projectId}";
+                command = new NpgsqlCommand(query, _connection);
+                reader = command.ExecuteReader();
+
+                while (reader.Read())
+                {
+                    project?.AdditionalMembers.Add(new Author
+                    {
+                        Name = reader.GetString(0) + " " + reader.GetString(1),
+                        Url = reader.GetString(2)
+                    });
+                }
+
                 return project;
             }
             finally

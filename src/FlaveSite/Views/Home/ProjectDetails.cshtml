@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Mvc.Rendering
+﻿@using FlaveSite.Core.Projects.Records
+@using Microsoft.AspNetCore.Mvc.Rendering
 @model FlaveSite.Core.Projects.Records.ProjectRecord
 
 @Html.Partial("Navbar")
@@ -36,8 +37,17 @@
         }
     </div>
     
-    <h2>Description</h2>
-    <span>@Html.Raw(Model.Description)</span>
+    <h3>Description</h3>
+    <span style="font-family: Arial">@Html.Raw(Model.Description)</span>
+    
+    <h3>Other Team Members</h3>
+    <p>
+    @foreach (Author teamMember in Model.AdditionalMembers)
+    {
+        <a href="@teamMember.Url">@teamMember.Name</a>
+        <br />
+    }
+    </p>
 </div>
 
 @Html.Partial("MainFooter")
