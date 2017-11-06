@@ -41,6 +41,7 @@ namespace FlaveSite.Controllers
         public IActionResult ProjectDetails(int projectId)
         {
             var project = _projectService.GetProjectDetails(projectId);
+            ViewData["Title"] = project.Title;
             return View(project);
         }
     }
