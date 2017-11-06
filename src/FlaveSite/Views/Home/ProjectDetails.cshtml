@@ -40,14 +40,17 @@
     <h3>Description</h3>
     <span style="font-family: Arial">@Html.Raw(Model.Description)</span>
     
-    <h3>Other Team Members</h3>
-    <p>
-    @foreach (Author teamMember in Model.AdditionalMembers)
+    @if (Model.AdditionalMembers.Count > 0)
     {
-        <a href="@teamMember.Url">@teamMember.Name</a>
-        <br />
+        <h3>Other Team Members</h3>
+        <p>
+            @foreach (Author teamMember in Model.AdditionalMembers)
+            {
+                <a href="@teamMember.Url">@teamMember.Name</a>
+                <br/>
+            }
+        </p>
     }
-    </p>
 </div>
 
 @Html.Partial("MainFooter")
