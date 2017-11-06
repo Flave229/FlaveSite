@@ -31,7 +31,9 @@
             foreach (var image in Model.Images)
             {
                 <div class="col-md-2">
-                    <img class="image-list-item" src="@image" />
+                    <a href="@image">
+                        <img class="image-list-item" src="@image"/>
+                    </a>
                 </div>
             }
         }
