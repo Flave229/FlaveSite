@@ -40,6 +40,19 @@
     <h3>Description</h3>
     <span style="font-family: Arial">@Html.Raw(Model.Description)</span>
     
+    @if (Model.Files.Count > 0)
+    {
+        <h3>Files</h3>
+        <p>
+            @foreach (string file in Model.Files)
+            {
+                var fileName = file.Split('/').Last();
+                <a href="@file">@fileName</a>
+                <br />
+            }
+        </p>
+    }
+
     @if (Model.AdditionalMembers.Count > 0)
     {
         <h3>Other Team Members</h3>

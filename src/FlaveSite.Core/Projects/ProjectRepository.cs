@@ -162,6 +162,9 @@ namespace FlaveSite.Core.Projects
                         case 2:
                             project.VideoUrl = mediaUrl;
                             break;
+                        case 3:
+                            project.Files.Add(mediaUrl);
+                            break;
                     }
                 }
 

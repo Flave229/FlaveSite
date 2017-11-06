@@ -15,11 +15,13 @@ namespace FlaveSite.Core.Projects.Records
         public string VideoUrl { get; set; }
         public int AuthorId { get; set; }
         public List<Author> AdditionalMembers { get; set; }
+        public List<string> Files { get; set; }
 
         public ProjectRecord()
         {
             Images = new List<string>();
             AdditionalMembers = new List<Author>();
+            Files = new List<string>();
         }
     }
 
