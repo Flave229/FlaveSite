@@ -182,10 +182,11 @@ namespace FlaveSite.Core.Projects
 
                 while (reader.Read())
                 {
+                    var portfolioUrl = reader[2] == DBNull.Value ? "" : reader.GetString(2);
                     project?.AdditionalMembers.Add(new Author
                     {
                         Name = reader.GetString(0) + " " + reader.GetString(1),
-                        Url = reader.GetString(2)
+                        Url = portfolioUrl
                     });
                 }
 
