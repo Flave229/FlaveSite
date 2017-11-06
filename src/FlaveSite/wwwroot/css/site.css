@@ -176,8 +176,21 @@ textarea {
 }
 
 .video-container {
-    padding-top: 10px;
     text-align: center;
+    position: relative;
+    margin-top: 10px;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+}
+
+.video-container iframe, .video-container object, .video-container embed {
+    position:absolute;
+    top:0;
+    left:0;
+    width:80%;
+    height:100%;
+    margin-left: 10%;
 }
 
 .image-list-container {
@@ -186,6 +199,6 @@ textarea {
 
 .image-list-item {
     height: 100px;
-    width: 100%;
+    max-width: 100%;
     margin-bottom: 10px;
 }
