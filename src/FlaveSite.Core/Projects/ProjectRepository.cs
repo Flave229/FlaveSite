@@ -150,7 +150,7 @@ namespace FlaveSite.Core.Projects
                     }
 
                     var isprimary = reader[7] != DBNull.Value && reader.GetBoolean(7);
-                    var mediaType = reader.GetInt32(8);
+                    var mediaType = reader[8] != DBNull.Value ? reader.GetInt32(8) : 0;
 
                     if (isprimary && mediaType == 1)
                         project.ImageUrl = mediaUrl;
