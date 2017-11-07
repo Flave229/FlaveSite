@@ -202,3 +202,8 @@ textarea {
     max-width: 100%;
     margin-bottom: 10px;
 }
+
+.strokeme {
+    color: white;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
