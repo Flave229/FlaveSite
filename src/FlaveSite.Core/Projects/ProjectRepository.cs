@@ -11,7 +11,7 @@ namespace FlaveSite.Core.Projects
     {
         private readonly NpgsqlConnection _connection;
 
-        public ProjectRepository()
+        public ProjectRepository(NpgsqlConnection connection)
         {
             var connectionString = File.ReadAllText("./wwwroot/config/LIVEConnectionString.config");
             _connection = new NpgsqlConnection(connectionString);
