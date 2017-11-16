@@ -48,7 +48,7 @@ textarea {
 }
 
 .header-background {
-    height: 600px;
+    height: 400px;
     width: 100%;
     background-image: url(/images/header-backgroundV2.png);
     -ms-background-repeat: no-repeat;
@@ -95,13 +95,13 @@ textarea {
 }
 
 .header-content {
-    height: 600px;
-    padding-top: 200px; 
+    height: 400px;
+    padding-top: 60px; 
 }
 
 .header-details-content {
-    height: 300px;
-    padding-top: 100px;
+    height: 200px;
+    padding-top: 50px;
 }
 
 .header-profile {
