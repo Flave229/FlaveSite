@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using FlaveSite.Core.Blogs;
 using FlaveSite.Core.Projects;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,11 +12,14 @@ using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace FlaveSite
 {
     public class Startup
     {
+        private NpgsqlConnection _connection;
+
         public Startup(IHostingEnvironment env)
         {
             var builder = new ConfigurationBuilder()
@@ -46,8 +51,13 @@ namespace FlaveSite
 
         private void RegisterApplicationServices(IServiceCollection services)
         {
-            services.AddTransient<ProjectRepository>();
-            services.AddTransient<ProjectService>();
+            var connectionString = File.ReadAllText("./wwwroot/config/LIVEConnectionString.config");
+            _connection = new NpgsqlConnection(connectionString);
+
+            services.AddSingleton<ProjectService, ProjectService>(x =>
+                new ProjectService(new ProjectRepository(_connection)));
+            services.AddSingleton<BlogService, BlogService>(x =>
+                new BlogService(new BlogRepository(_connection)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

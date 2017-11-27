@@ -48,7 +48,7 @@ textarea {
 }
 
 .header-background {
-    height: 600px;
+    height: 400px;
     width: 100%;
     background-image: url(/images/header-backgroundV2.png);
     -ms-background-repeat: no-repeat;
@@ -61,7 +61,7 @@ textarea {
 }
 
 .header-details {
-    height: 300px;
+    height: 400px;
     width: 100%;
     -ms-background-repeat: no-repeat;
     background-repeat: no-repeat;
@@ -94,14 +94,14 @@ textarea {
     background: rgba(20, 20, 20, 0.5);
 }
 
-.header-content {
-    height: 600px;
-    padding-top: 200px; 
+.header-profile-content {
+    height: 400px;
+    padding-top: 60px;
 }
 
 .header-details-content {
-    height: 300px;
-    padding-top: 100px;
+    height: 400px;
+    padding-top: 170px;
 }
 
 .header-profile {
