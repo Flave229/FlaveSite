@@ -26,7 +26,7 @@
                 <a href="@Url.Action("ProjectDetails", "Home", new { projectId = project.Id })">
                 <div class="panel panel-primary admin-panel" style="background: url(@project.ImageUrl) no-repeat right top">
                     <h4 class="strokeme"> @project.Title</h4>
-                    <span class="strokeme"> @project.Date.ToShortDateString()</span>
+                    <span class="strokeme"> @project.Date.ToString("dd/MM/yyyy")</span>
                 </div>
                 </a>
             </div>
