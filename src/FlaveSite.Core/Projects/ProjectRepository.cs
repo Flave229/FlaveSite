@@ -65,6 +65,7 @@ namespace FlaveSite.Core.Projects
                                         Projects.title,
                                         Projects.description,
                                         Projects.date,
+                                        Projects.priority,
                                         Authors.firstname,
                                         Authors.lastname,
                                         Media.url
@@ -72,7 +73,7 @@ namespace FlaveSite.Core.Projects
                                     LEFT JOIN Authors ON Authors.id = Projects.authorId
                                     LEFT JOIN Media ON Media.projectid = Projects.id
                                         AND Media.isprimary = true
-                                    ORDER BY Projects.date DESC";
+                                    ORDER BY Projects.priority, Projects.date DESC";
                 var command = new NpgsqlCommand(query, _connection);
 
                 var reader = command.ExecuteReader();
@@ -81,7 +82,7 @@ namespace FlaveSite.Core.Projects
 
                 while (reader.Read())
                 {
-                    var imageUrl = reader[6] == DBNull.Value ? "" : reader.GetString(6);
+                    var imageUrl = reader[7] == DBNull.Value ? "" : reader.GetString(7);
 
                     var project = new ProjectRecord
                     {
@@ -89,7 +90,7 @@ namespace FlaveSite.Core.Projects
                         Title = reader.GetString(1),
                         Description = reader.GetString(2),
                         Date = reader.GetDateTime(3),
-                        Author = reader.GetString(4) + " " + reader.GetString(5),
+                        Author = reader.GetString(5) + " " + reader.GetString(6),
                         ImageUrl = imageUrl
                     };
 
