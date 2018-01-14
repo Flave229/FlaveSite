@@ -1,10 +1,8 @@
-﻿
-@using Microsoft.AspNetCore.Mvc.Rendering
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
 @model List<FlaveSite.Core.Blogs.Blog>
 
-@Html.Partial("Navbar")
 <div class="header-background"></div>
-<div class="header-details-content">
+<div class="header-profile-content">
     <div class="row" style="top: 50%">
         <div class="col-md-4"></div>
         <div class="col-md-4 header-profile">
@@ -14,6 +12,7 @@
         <div class="col-md-4"></div>
     </div>
 </div>
+@Html.Partial("Navbar")
 
 
 <div class="container body-content">

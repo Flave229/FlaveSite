@@ -14,11 +14,16 @@ namespace FlaveSite.Controllers
 
         public IActionResult Index()
         {
-            ViewData["Title"] = "Gaze into the inner ramblings of a programmer";
+            ViewData["Title"] = "Mostly Coherent Ramblings";
 
             var blogItems = _blogService.GetBlogs();
 
             return View("Index", blogItems);
+        }
+
+        public IActionResult Test()
+        {
+            return View("TestBlog");
         }
     }
 }

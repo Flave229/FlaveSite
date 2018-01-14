@@ -234,3 +234,11 @@ textarea {
     color: white;
     text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
+
+.code-block {
+    background-color: #D3D3D3;
+    padding-left: 15px;
+    padding-right: 15px;
+    white-space: pre;
+    font-size: 10px;
+}
