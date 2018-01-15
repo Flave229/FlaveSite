@@ -14,11 +14,15 @@
 
 
 <div class="container body-content" style="font-family: Arial">
-    <h4>Introduction</h4>
-    Where better to start a blog for a website, than digging up some code you wrote over two years ago and ripping it apart! I first started programming using DirectX in 2015, where the majority of this code was written. A warning to the more experienced programmers, the code I am about to reveal is HORRIBLY hacked together and would likely even cause the strong willed to wince. The objective of this exercise is mainly to discover how far I have progressed since first using DirectX 2 years ago, while also giving me a lesson in refactoring evil rookie code. So, let's delve into the abyss!
+    <h3>Introduction</h3>
+    I decided to start a blog to start documenting my progress in my career as a game programmer. I am likely to post about refactors, experiements and projects I undertake in this section and make them publically avaliable in case anyone is interested.
+    <br/><br/>
+    Where better to start a blog section on documenting progress than digging up some code you wrote over two years ago and ripping it apart! I first started programming using DirectX in 2015, where the majority of this code was written. The project was to create a DirectX engine that utilises simple to moderate 3D graphics techniques, as well as AI and physics. The full project can be seen <a href="http://localhost:5123/Home/ProjectDetails?projectId=4">here</a>.
+    <br/><br />
+    A warning to the more experienced programmers, the code I am about to reveal is HORRIBLY hacked together and would likely even cause the strong willed to wince. The objective of this exercise is mainly to discover how far I have progressed since first using DirectX 2 years ago, while also giving me a lesson in refactoring evil rookie code. So, let's delve into the abyss!
     <br><br>
-    <h4>Problem Identification</h4>
-    Immediately, upon loading the application, it was apparent that were was a huge issue with memory being leaked at runtime [Figure 1]. Can’t fault past me for creating a fun project for myself 2 years down the line...
+    <h3>Problem Identification</h3>
+    Immediately, upon loading the application, it was apparent that were was a huge issue with memory being leaked at runtime [Figure 1]. The diagnostic session lasted for 1 minute and 10 seconds and reached 399MB of processed memory. Can’t fault past me for creating a fun project for myself 2 years down the line...
     <br><br>
     <div class="row" style="text-align: center">
         <div class="col-md-1"></div>
@@ -30,9 +34,9 @@
         <div class="col-md-1"></div>
     </div>
     <br>
-    Not to mention that most of the code for this application seems to be situated within the main "Application" class, consisting of 1530 lines. I can't bear to look at how many layers of nested if statements exist in this frankensteined code. With only a quick glace at the project, it is clear what problems need addressing in this first refactor.
+    Not to mention that most of the code for this application seems to be situated within the main "Application" class, consisting of 1530 lines. I can't bear to look at how many layers of nested if statements exist in this frankensteined code. With only a quick glace at the project, it is clear what problems need addressing in this first refactor. So this first blog will be dedicated to fixing the memory leaks.
     <br><br>
-    <h4>Plugging the Memory Leak</h4>
+    <h3>Plugging the Memory Leaks</h3>
     After overcoming the guilt and shame of ever having written this code, it was time to work on righting that wrong and removing the offending code from existence. First, we need to locate the source of the memory leak, which can be done by using Visual Studio's built in Performance Profiler.
     <br><br>
     <div class="row" style="text-align: center">
@@ -45,8 +49,11 @@
         <div class="col-md-1"></div>
     </div>
     <br>
-    So, let's look at what Billboard::Update() is doing:
+    A lot of allocations seem to be happening in <code>Application::Update()</code>, more than would be expected for a fairly small project [Figure 2].
     <br><br>
+    <h4>Memory Leak: Billboard</h4>
+    So, let's look at what <code>Billboard::Update()</code> is doing!
+    <br/><br/>
     <div class="code-block">
 <samp>HRESULT Billboard::Update(float delta, ID3D11Device * pd3dDevice, XMFLOAT3 eyePos)
 {
@@ -184,12 +191,175 @@
 <samp>HRESULT Billboard::CreateVertexBuffer(ID3D11Device* pd3dDevice, const XMFLOAT3& worldPosition, const XMVECTOR& vectorRight, const XMVECTOR& vectorUp)
 {
     GetAppearance()->GetGeometryData()->VertexBuffer->Release();
-    delete GetAppearance()->GetGeometryData()->VertexBuffer;
     GetAppearance()->GetGeometryData()->VertexBuffer = nullptr;
 
     ...
 
     return pd3dDevice->CreateBuffer(&bd, &InitData, &GetAppearance()->GetGeometryData()->VertexBuffer);
+}</samp>
+    </div>
+    <br>
+    While this works, it is failing to address a fairly important flaw in the code. In games programming, a billboarded object is often a simple 2D sprite that rotates to always face the player. The vertex buffer is updated each frame to place the vertices in a way that cause the billboard to face the player, but what happens if the player doesn't move? 
+    <br><br>
+    In this code, the application will simply plough on and reconstruct the vertex buffer regardless. Let's add a check in <code>Billboard::Update()</code> to prevent this:
+    <br><br>
+    <div class="code-block">
+<samp>HRESULT Billboard::Update(const float delta, ID3D11Device* pd3dDevice, const XMFLOAT3& eyePosition)
+{
+    // Extracting world position from matrix
+    const XMFLOAT3 worldPosition = XMFLOAT3(GetTransform()->GetWorld()._41, GetTransform()->GetWorld()._42, GetTransform()->GetWorld()._43);
+
+    const XMFLOAT3 vectorNormalVector = CalculateBillboardNormal(worldPosition, eyePosition);
+
+    if (_vectorNormal.x == vectorNormalVector.x && _vectorNormal.y == vectorNormalVector.y && _vectorNormal.z == vectorNormalVector.z)
+    {
+        GameObject::Update(delta);
+        return S_OK;
+    }
+
+    _vectorNormal = vectorNormalVector;
+
+    ...
+
+    HRESULT hr = CreateVertexBuffer(pd3dDevice, worldPosition, vectorRight, vectorUp);
+    if (FAILED(hr))
+        return hr;
+        
+    ...
+}</samp>
+    </div>
+    <br>
+    Now, the code will check if any changes occured to the normal vector drawn between the world position and eye position. The call to <code>CreateVertexBuffer(...)</code> is therefore only called if the camera or billboard have moved since the last frame. A few changes were made to the new <code>CalculateBillboardNormal(...)</code> method to return an object of type <code>XMFLOAT3</code> opposed to <code>XMVECTOR</code> as they are easier to work with. It is later updated to an <code>XMVECTOR</code> in the <code>Billboard::Update(...)</code> method.
+    <br/><br/>
+    This improved the severity of the memory leak quite significantly, although it is clear the application still has some leaky pipes [Figure 4].
+    <br><br>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/1-4.png" style="max-width: 100%" />
+            <br>
+            <p style="color: #888888">Figure 4 - Still leaking... but getting there!</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br><br>
+    <h4>Memory Leak: Particle Emitter</h4>
+    The second big worry in the memory leak department was the amount of allocations being done by the Particle Emitter. This class is responsible, surprisingly enough, for emitting particles. As a result, it shouldn't be too odd to expect such a class to allocate a lot of memory to generate a large amount of particles. What is worrying, however, is that this memory never appears to be deallocated. Let's investigate where the particles are allocated and how the application stores them, with the intention of discovering how the application deals with the deletion of a particle once it's energy has been expended.
+    <br/><br/>
+    The method <code>ParticleEmitter::Update()</code> appears to have code that deals with the deletion of particles already:
+    <br/><br/>
+    <div class="code-block">
+<samp>void ParticleEmitter::Update(float delta, ID3D11Device * pd3dDevice)
+{
+    ...
+
+	// Update particles
+	for (int i = 0; i < _particles.size(); i++) {
+		SmokeParticle* particle = (SmokeParticle*)_particles.at(i);
+
+		if (particle != nullptr) {
+			particle->Update(delta);
+
+			if (particle->GetHealth() < 0.0f) {
+				delete particle;
+				_particles.at(i) = nullptr;
+			}
+		}
+	}
+
+	GameObject::Update(delta);
+}</samp>
+    </div>
+    <br/>
+    This code looks like it does the intended job, so let's check the deconstructor...
+    <br/><br/>
+    <div class="code-block">
+<samp>SmokeParticle::~SmokeParticle()
+{
+}</samp>
+    </div>
+    <br/>
+    Again, although the deconstructor is empty, this code should be fine as the class <code>SmokeParticle</code> containts no memory allocated on the heap. So where does the problem occur?
+    <br/><br/>
+    It turns out that one of the problems is related to the class it inherets from, <code>GameObject</code>. This class is inhereted by every other object that has a visual presence in the 3D world (ugh) and is therefore a memory leak that occurs everywhere. Here is the guilty code:
+    <br/><br/>
+    <div class="code-block">
+<samp>GameObject::~GameObject()
+{
+    if (_appearance != nullptr)		delete _appearance;
+    if (_particleModel != nullptr)	delete _particleModel;
+
+    _waypointManager = nullptr;
+    _parent = nullptr;
+    _transform = nullptr;
+    _particleModel = nullptr;
+}</samp>
+    </div>
+    <br/>
+    Can you spot the rookie mistake? If not, the problem is that simply setting some of the pointer variables to <code>nullptr</code> is not equivalent to deleting them from the heap. In this scenareo, it doesn't make much sense to delete <code>_waypointManager</code> and <code>_parent</code> as they are pieces of code still being used elsewhere. The rest however, should be removed like so:
+    <br/><br/>
+    <div class="code-block">
+<samp>GameObject::~GameObject()
+{
+    if (_appearance)
+    {
+        delete _appearance;
+        _appearance = nullptr;
+    }
+    if (_particleModel)
+    {
+        delete _particleModel;
+        _particleModel = nullptr;
+    }
+    if (_transform)
+    {
+        delete _transform;
+        _transform = nullptr;
+    }
+    if (_particleModel)
+    {
+        delete _particleModel;
+        _particleModel = nullptr;
+    }
+}</samp>
+    </div>
+    <br/>
+    This is not the only problem however. Another issue remains where the particle emitters themselves are never deleted when their parent is destroyed. In the application, each plane has a particle emitter that fires smoke particles when the plane is damaged. Once the plane has crashed, it is deleted from the world. However, no checks are put into place to delete the particle emitter, meaning it and all its particles are left suspended in memory with nothing to call it. There are multiple ways to fix this, and it is most tempting to redesign the entire system. However, for now, let's give the plane a list of child objects that it is responsible for deleting.
+    <br/><br/>
+    <div class="code-block">
+<samp>class GameObject
+{
+protected:
+    ...
+    GameObject* _parent;
+    std::vector&lt;GameObject*&gt; _children;
+    std::string _name;
+
+    ...
+};</samp>
+    </div>
+    <br/>
+    <div class="code-block">
+<samp>void PlaneSpawner::Update(float delta, ID3D11Device * pd3dDevice, vector&lt;GameObject*&gt;* objList)
+{
+    ...
+
+    ParticleEmitter* newSmoke = new ParticleEmitter(team + "_Spawned_Smoke_" + to_string(_planeCount), nullptr, smokeTransform, smokeParticle, pd3dDevice, 100.0f, 0.01f, true);
+    newSmoke->SetParent(newPlane);
+    newPlane->AddChild(newSmoke);
+    
+    ...
+}</samp>
+    </div>
+    <br/>
+    <div class="code-block">
+<samp>ParticleEmitter::~ParticleEmitter()
+{
+    for(SmokeParticle* particle : _particles)
+        delete particle;
+
+    for(BulletParticle* particle : _bullets)
+        delete particle;
 }</samp>
     </div>
 </div>
