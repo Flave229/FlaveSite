@@ -193,6 +193,14 @@ textarea {
     background-color: #818181;
 }
 
+.blog-panel {
+    height: 50px;
+    color: whitesmoke;
+    border-color: #888888;
+    padding: 5px 5px 5px 20px;
+    background-color: #888888;
+}
+
 .admin-panel-form-label {
     padding-top: 6px;
 }

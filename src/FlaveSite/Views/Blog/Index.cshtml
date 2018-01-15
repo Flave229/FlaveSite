@@ -1,5 +1,5 @@
 ﻿@using Microsoft.AspNetCore.Mvc.Rendering
-@model List<FlaveSite.Core.Blogs.Blog>
+@model List<FlaveSite.Core.Blogs.BlogInfo>
 
 <div class="header-background"></div>
 <div class="header-profile-content">
@@ -18,13 +18,13 @@
 <div class="container body-content">
     <h2>@ViewData["Title"]</h2>
     
-    @foreach (var project in Model)
+    @foreach (var blog in Model)
     {
         <div class="row">
             <div class="col-md-12">
-                <a href="@Url.Action("BlogDetails", "Blog", new { projectId = project.Id })">
-                    <div class="panel panel-primary admin-panel">
-                        <h4> @project.Title</h4>
+                <a href="@Url.Action("BlogDetails", "Blog", new { blogId = blog.Id })">
+                    <div class="panel panel-primary blog-panel">
+                        <h4> @blog.Title</h4>
                     </div>
                 </a>
             </div>

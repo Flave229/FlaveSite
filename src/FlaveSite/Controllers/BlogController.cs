@@ -21,6 +21,14 @@ namespace FlaveSite.Controllers
             return View("Index", blogItems);
         }
 
+        public IActionResult BlogDetails(int blogId)
+        {
+            var blog = _blogService.GetBlog(blogId);
+
+            ViewData["Title"] = blog.BlogInformation.Title;
+            return View(blog);
+        }
+
         public IActionResult Test()
         {
             return View("TestBlog");

@@ -11,9 +11,14 @@ namespace FlaveSite.Core.Blogs
             _repository = repository;
         }
 
-        public List<Blog> GetBlogs()
+        public List<BlogInfo> GetBlogs()
         {
             return _repository.GetBlogList();
+        }
+
+        public Blog GetBlog(int id)
+        {
+            return _repository.GetBlog(id);
         }
     }
 }
