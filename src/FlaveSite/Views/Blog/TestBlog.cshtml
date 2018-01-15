@@ -375,6 +375,61 @@ protected:
         <div class="col-md-1"></div>
     </div>
     <br><br>
+    
+    <h4>Locating the smaller leaks</h4>
+    To locate where the other leaks are occuring, the heap profiler provided by Visual Studio can be used to located which methods allocate the most things to the heap [Figure 6]. Leaving a gap of 40 seconds between the first and second heap profiles should give an approximate overview of where most allocations are happening [Figure 7]. This seems to suggest that most allocations are still occuring on the <code>ParticleEmitter::Update(...)</code> method, which can be proven by inspecting the Allocation Call Stack on the Heap Profiler [Figure 8].
+    <br><br>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/1-6.png" style="max-width: 100%" />
+            <br>
+            <p style="color: #888888">Figure 6 - Heap Profile.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/1-7.png" style="max-width: 100%" />
+            <br>
+            <p style="color: #888888">Figure 7 - Allocations made to the heap over 40 seconds of runtime.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/1-8.png" style="max-width: 100%" />
+            <br>
+            <p style="color: #888888">Figure 8 - Allocation Call Stack for all Transform class heap allocations.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br>
+    It would appear that, even with the changes made previously, the particles are still not being deleted correctly. It was also noticed that a simular issue was occuring when a Plane was spawned, which happens far less frequently, but was still a memory leak that was occuring. Then, it occured to me to check that the deconstructors in the classes derived from GameObject were actually being called and... lo and behold, in most cases, they were not.
+    <br/><br/>
+    In the main application file, all objects are stored in a vector list of <code>GameObject</code>s. The Application class is responsible for deleting these when appropiate, so it calls <code>delete _objects.at(i);</code>, for example. Except, in the code, the deconstructor was not made virtual, meaning that when the deconstructor is called, it only calls it on the object it is stored as, which was of type <code>GameObject</code>. Therefore, all data stored in <code>GameObject</code>'s derived classes were not deleted. To fix this, the keyword virtual was inserted before the <code>GameObject</code> deconstructor and it's derived classes so the virtual table can be constructed, allowing the code to know what deconstructor to call at runtime.
+    <br/><br/>
+    <div class="code-block">
+        <samp>virtual ~GameObject();</samp>
+    </div>
+    <br/><br/>
+    This leveled out the processed memory graph and appeared to have fixed the memory leak for the most part [Figure 9]. Small other issues remained with a few smaller classes not correctly deallocating memory, but nothing outrageous enough to be worth noting in this blog.
+    <br/><br/>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/1-9.png" style="max-width: 100%" />
+            <br>
+            <p style="color: #888888">Figure 9 - Much better!</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br>
+    I hope you have enjoyed this first blog post! It's not the most interesting of topics, but it has been a good exercise to delve into how poor my understanding was 2 years ago and fix some of the more sinister issues. I may pick this up again in the future for further refactoring exercises as there is a LOT I can do... But I may opt to cover some more interesting topics that may be of use to aspiring DirectX developers. 
+    <br/><br/>
+    Thank you for your time!
 </div>
 
 @Html.Partial("MainFooter")
