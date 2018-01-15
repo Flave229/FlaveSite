@@ -362,6 +362,19 @@ protected:
         delete particle;
 }</samp>
     </div>
+    <br/>
+    This seems to have made a small difference in the performance profiler now, with drop offs in memory being detectable [Figure 5]. However, the graph still follows an upwards trend suggesting memory leaks are still present elsewhere in the application.
+    <br><br>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/1-5.png" style="max-width: 100%" />
+            <br>
+            <p style="color: #888888">Figure 5 - Drops in memory now visible.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br><br>
 </div>
 
 @Html.Partial("MainFooter")
