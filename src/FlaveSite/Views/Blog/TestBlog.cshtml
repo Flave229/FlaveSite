@@ -21,6 +21,106 @@
     <br /><br />
     <h3>Theory</h3>
     Terrain is most typically represented as a 2D grid with any number of cells that then have their y values manipulated by a height map or noise-generating algorithm. This grid will be generated programatically with each vertex being placed at an equal distance from each other. Considerations must be made to DirectX being a left-handed coordiante system, as it means that it the ordering of the vertices are important.
+    <br><br>
+    The manipulation of the y values will be explained in later tutorials, which will be linked here when they are ready.
+    <br><br>
+    The construction of the grid must be split into two sections: The generation of the grid vertices, and the generation of the grid indices. The vertices can be created simply by stepping along each row and adding them at a spacing equal to the desired cell width [Figure 1]. To calculate the indices, we need to consider vertices on two rows to construct the polygons that make up the grid [Figure 2].
+    <br><br>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/2-2.png" style="max-width: 60%" />
+            <br><br>
+            <p style="color: #888888">Figure 1 - A few vertices that make up a simple 1x3 grid.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/2-1.png" style="max-width: 60%" />
+            <br><br>
+            <p style="color: #888888">Figure 2 - A simple 1x3 grid where the numbers represent the draw order of the vertices.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br><br>
+    The index list for this grid would be something like this: { 0, 1, 2, 0, 3, 1, 2, 5, 4, 2, 1, 5, 4, 7, 6, 4, 5, 7 } (For an array starting at 0).
+    <br /><br />
+    <h3>Code</h3>
+    With the basic theory covered, it's time to implement a grid builder into our application. We will start by creating a class called, conveniently enough, <code>GridBuilder</code>.
+    <br/><br/>
+    <div class="code-block">
+<samp>class GridBuilder
+{
+private:
+    ID3D11Device* _device;
+
+    static vector&lt;Vertex&gt; BuildVertexList(Box gridSize, XMFLOAT2 cellCount);
+    static vector&lt;unsigned short&gt; BuildIndexList(XMFLOAT2 cellCount);
+
+    ID3D11Buffer* CreateVertexBuffer(unsigned long long vertexCount, Vertex* finalVerts) const;
+    ID3D11Buffer* CreateIndexBuffer(int indexCount, unsigned short* indices) const;
+public:
+    GridBuilder(ID3D11Device* device);
+    ~GridBuilder();
+
+    Geometry* Build(Box gridSize, XMFLOAT2 cellCount) const;
+};</samp>
+    </div>
+    <br/>
+    The <code>Box</code> class being passed into some of the methods is simply a data transfer object containing a width and height. We have a few things of note here. Firstly, the class uses a tiny bit of dependency injection by holding a reference to the <code>ID3D11Device</code>, passed into the constructor at initialisation. Then, we have the main <code>Build(...)</code> method, which takes a grid size and cell count as parameters.
+    <br/><br/>
+    We also have some helper methods to assist us and make our code a little cleaner, which are the private <code>BuildVertexList(...)</code>, <code>BuildIndexList(...)</code>, <code>CreateVertexBuffer(...)</code> and <code>CreateIndexBuffer(...)</code>. Their jobs should be fairly self-explanitory, but the logic inside each method will be explained in detail shortly.
+    <br/><br/>
+    First, let's look at the <code>BuildVertexList(...)</code> method.
+    <br/><br/>
+    <div class="code-block">
+<samp>vector<Vertex> GridBuilder::BuildVertexList(const Box gridSize, const XMFLOAT2 cellCount)
+{
+    const int halfWidth = gridSize.Width / 2;
+    const int halfDepth = gridSize.Height / 2;
+    const XMFLOAT2 cellSize = XMFLOAT2(gridSize.Width / cellCount.x, gridSize.Height / cellCount.y);
+
+    vector&lt;Vertex&gt; vertices = vector&lt;Vertex&gt;();
+    for (int row = 0; row <= cellCount.x; row++)
+    {
+        for (int column = 0; column <= cellCount.y; column++)
+        {
+            Vertex vertex;
+            vertex.position = XMFLOAT3(column * cellSize.x - halfWidth, 0, row * cellSize.y - halfDepth);
+            vertex.texture = XMFLOAT2(row * (cellCount.x / gridSize.Width), column * (cellCount.y / gridSize.Height));
+            vertex.normal = XMFLOAT3(0, 1, 0);
+            vertex.tangent = XMFLOAT3(0, 0, 1);
+            vertex.binormal = XMFLOAT3(1, 0, 0);
+            vertices.push_back(vertex);
+        }
+    }
+
+    return vertices;
+}</samp>
+    </div>
+    <br/>
+    The important part of this method is the calculation of the position and texture coordinates for each vertex. But before we do that, note the first three lines. The first two lines will find half the width and depth, which is used later so that the center of the grid in centered at local coordinates (0, 0). This third line will determine the cell spacing between vertices. 
+    <br/><br/>
+    We then generate an amount of vertices equal to the <code>(cellCount.x + 1) * (cellCount.y + 1)</code>, which is done via the nested for loops. For each vertex, we calculate it's position using the following formula:
+    <div style="text-align: center">
+        <code>XMFLOAT3(column * cellSize.x - halfWidth, 0, row * cellSize.y - halfDepth)</code>
+    </div>
+    <br/>
+    We can see how this code constructs the vertices with the following gif [Figure 3]
+    <br /><br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/2-3.gif" style="max-width: 80%" />
+            <br>
+            <p style="color: #888888">Figure 3 - Gif explaining how the code constructs each vertex.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br><br>
 </div>
 
 @Html.Partial("MainFooter")
