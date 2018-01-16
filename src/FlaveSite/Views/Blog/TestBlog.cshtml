@@ -74,10 +74,11 @@ public:
     <br/><br/>
     We also have some helper methods to assist us and make our code a little cleaner, which are the private <code>BuildVertexList(...)</code>, <code>BuildIndexList(...)</code>, <code>CreateVertexBuffer(...)</code> and <code>CreateIndexBuffer(...)</code>. Their jobs should be fairly self-explanitory, but the logic inside each method will be explained in detail shortly.
     <br/><br/>
+    <h4>Constructing the Vertices</h4>
     First, let's look at the <code>BuildVertexList(...)</code> method.
     <br/><br/>
     <div class="code-block">
-<samp>vector<Vertex> GridBuilder::BuildVertexList(const Box gridSize, const XMFLOAT2 cellCount)
+<samp>vector&lt;Vertex&gt; GridBuilder::BuildVertexList(const Box gridSize, const XMFLOAT2 cellCount)
 {
     const int halfWidth = gridSize.Width / 2;
     const int halfDepth = gridSize.Height / 2;
@@ -105,6 +106,7 @@ public:
     The important part of this method is the calculation of the position and texture coordinates for each vertex. But before we do that, note the first three lines. The first two lines will find half the width and depth, which is used later so that the center of the grid in centered at local coordinates (0, 0). This third line will determine the cell spacing between vertices. 
     <br/><br/>
     We then generate an amount of vertices equal to the <code>(cellCount.x + 1) * (cellCount.y + 1)</code>, which is done via the nested for loops. For each vertex, we calculate it's position using the following formula:
+    <br /><br />
     <div style="text-align: center">
         <code>XMFLOAT3(column * cellSize.x - halfWidth, 0, row * cellSize.y - halfDepth)</code>
     </div>
@@ -121,6 +123,109 @@ public:
         <div class="col-md-1"></div>
     </div>
     <br><br>
+    The texture coordinate code ensures that the entire grid contains texture coordinates between 0 and 1, which is calculated using the provided cell count and grid size.
+    <br /><br />
+    <div style="text-align: center">
+        <code>XMFLOAT2(row * (cellCount.x / gridSize.Width), column * (cellCount.y / gridSize.Height))</code>
+    </div>
+    <br /><br />
+    <h4>Constructing the Indices</h4>
+    Constructing the indices is a slightly different beast, but is fairly simple if we approach it in the correct way. First, let's look at the code in <code>BuildIndexList(...)</code>:
+    <br/><br/>
+    <div class="code-block">
+<samp>vector&lt;unsigned short&gt; GridBuilder::BuildIndexList(const XMFLOAT2 cellCount)
+{
+    vector&lt;unsigned short&gt; indices = vector&lt;unsigned short&gt;();
+    for (int row = 0; row < cellCount.x; row++)
+    {
+        for (int column = 0; column < cellCount.y; column++)
+        {
+            unsigned short topLeftIndex = row * (cellCount.y + 1) + column;
+            unsigned short topRightIndex = topLeftIndex + 1;
+            unsigned short bottomLeftIndex = topLeftIndex + cellCount.y + 1;
+            unsigned short bottomRightIndex = topLeftIndex + cellCount.y + 2;
+
+            indices.push_back(topLeftIndex);
+            indices.push_back(bottomRightIndex);
+            indices.push_back(topRightIndex);
+            indices.push_back(topLeftIndex);
+            indices.push_back(bottomLeftIndex);
+            indices.push_back(bottomRightIndex);
+        }
+    }
+
+    return indices;
+}</samp>
+    </div>
+    <br/>
+    This code will go through each square in each row of the grid, and get the index for that vertex. Because the vertices on a higher row will have much higher indexes, we need to add the cellCount to the index to move us up to the next row. Once this has been done, we can push 6 indices to the index list that represent the two polygon faces making up the square.
+    <br/><br/>
+    <b>NOTE: This is the part where it is important to consider that DirectX uses a left-handed coordinate system. Make sure that you are drawing these polygon faces in a counter-clockwise direction, otherwise you are going to end up with some weird issues later down the line.</b>
+    <br /><br />
+    <h4>Preparing the Buffers for DirectX</h4>
+    If you are familiar with any object loading in DirectX, you should know that the vertex and index buffers need to be pushed into an object of type <code>ID3D11Buffer</code> to later get passed to the GPU. The last two helper methods, <code>CreateVertexBuffer(...)</code> and <code>CreateIndexBuffer(...)</code> do exactly this, and should be quite familiar to you.
+    <br/><br/>
+    <div class="code-block">
+<samp>ID3D11Buffer* GridBuilder::CreateVertexBuffer(const unsigned long long vertexCount, Vertex* finalVerts) const
+{
+    D3D11_BUFFER_DESC bd;
+    ZeroMemory(&bd, sizeof(bd));
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(Vertex) * static_cast&lt;UINT&gt;(vertexCount);
+    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA InitData;
+    ZeroMemory(&InitData, sizeof(InitData));
+    InitData.pSysMem = finalVerts;
+
+    ID3D11Buffer* vertexBuffer;
+    _device->CreateBuffer(&bd, &InitData, &vertexBuffer);
+    return vertexBuffer;
+}
+
+ID3D11Buffer* GridBuilder::CreateIndexBuffer(const int indexCount, unsigned short* indices) const
+{
+    D3D11_BUFFER_DESC bd;
+    ZeroMemory(&bd, sizeof(bd));
+    bd.Usage = D3D11_USAGE_DEFAULT;
+    bd.ByteWidth = sizeof(WORD) * static_cast&lt;UINT&gt;(indexCount);
+    bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+    bd.CPUAccessFlags = 0;
+
+    D3D11_SUBRESOURCE_DATA InitData;
+    ZeroMemory(&InitData, sizeof(InitData));
+    InitData.pSysMem = indices;
+
+    ID3D11Buffer* indexBuffer;
+    _device->CreateBuffer(&bd, &InitData, &indexBuffer);
+    return indexBuffer;
+}</samp>
+    </div>
+    <br/>
+    The only thing left to do is to call all these methods in the right order and pass the geometry data back to the code that requested it! This call would be made to the publically avaliable <code>Build(...)</code> method by passing it the desired grid size and cell count. Then, slap on a texture and draw the grid, and it should look something like Figure 4 & 5.
+    <br /><br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/2-4.png" style="max-width: 80%" />
+            <br>
+            <p style="color: #888888">Figure 4 - 10x10 cell grid with 100x100 size.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br/>
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/2-5.png" style="max-width: 80%" />
+            <br>
+            <p style="color: #888888">Figure 5 - 10x10 cell grid with 100x100 size.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br/>
+    In the next tutorial, we will investigate how to manipulate the y values on this grid using a height map.
 </div>
 
 @Html.Partial("MainFooter")
