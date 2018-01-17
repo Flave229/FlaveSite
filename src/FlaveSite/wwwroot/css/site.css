@@ -247,6 +247,6 @@ textarea {
     background-color: #D3D3D3;
     padding-left: 15px;
     padding-right: 15px;
-    white-space: pre;
+    white-space: pre-wrap;
     font-size: 10px;
 }
