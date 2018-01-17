@@ -83,13 +83,14 @@ namespace FlaveSite.Core.Projects
                 while (reader.Read())
                 {
                     var imageUrl = reader[7] == DBNull.Value ? "" : reader.GetString(7);
+                    var date = reader[3] == DBNull.Value ? null : (DateTime?)reader.GetDateTime(3);
 
                     var project = new ProjectRecord
                     {
                         Id = reader.GetInt32(0),
                         Title = reader.GetString(1),
                         Description = reader.GetString(2),
-                        Date = reader.GetDateTime(3),
+                        Date = date,
                         Author = reader.GetString(5) + " " + reader.GetString(6),
                         ImageUrl = imageUrl
                     };
@@ -136,6 +137,7 @@ namespace FlaveSite.Core.Projects
                 while (reader.Read())
                 {
                     var mediaUrl = reader[6] == DBNull.Value ? "" : reader.GetString(6);
+                    var date = reader[3] == DBNull.Value ? null : (DateTime?)reader.GetDateTime(3);
 
                     if (project == null)
                     {
@@ -144,7 +146,7 @@ namespace FlaveSite.Core.Projects
                             Id = reader.GetInt32(0),
                             Title = reader.GetString(1),
                             Description = reader.GetString(2),
-                            Date = reader.GetDateTime(3),
+                            Date = date,
                             AuthorId = reader.GetInt32(9),
                             Author = reader.GetString(4) + " " + reader.GetString(5)
                         };
