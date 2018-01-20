@@ -15,23 +15,131 @@
 
 <div class="container body-content" style="font-family: Arial">
     <h3>Introduction</h3>
-    Terrain Generation has been an important component of games for a long time now, as is even more prevelent and important as technology has advanced and gamers have responded well to open, expansive worlds and universes they can explore. However, generating these worlds at the hands of an art team is expensive and time consuming. At a point, it becomes unfeasable or even impossible. Luckily, as programmers, we can create terrain programatically using a few different techniques, like perlin noise.
-    <br/><br/>
-    This series of blog posts will act as a tutorial, in part, and will go over the process of generating terrain in DirectX11. This first tutorial will cover the basics of generating a grid in a project I had previously built <a href="http://www.flave.co.uk/Home/ProjectDetails?projectId=11">here</a>. I will try and explain any of my engine-specific features to avoid confusing anyone following this tutorial, so that you can account for them and work around them where required.
+There are many ways to create terrain in games programming. One method is to use a pre-made height map containing the height data of a terrain over an area. This tutorial will cover how to use these heightmaps with the the grid we made in <a href="http://www.flave.co.uk/Blog/BlogDetails?blogId=2">this tutorial</a>. If you have not yet generated a grid of any size with any cell count, you will need that to complete this tutorial. I will also not provide any insight to the creation of the heightmaps, going off the assumption you know this/have heightmaps ready for use.
     <br /><br />
     <h3>Theory</h3>
-    Terrain is most typically represented as a 2D grid with any number of cells that then have their y values manipulated by a height map or noise-generating algorithm. This grid will be generated programatically with each vertex being placed at an equal distance from each other. Considerations must be made to DirectX being a left-handed coordiante system, as it means that it the ordering of the vertices are important.
-    <br><br>
-    The manipulation of the y values will be explained in later tutorials, which will be linked here when they are ready.
-    <br><br>
-    The construction of the grid must be split into two sections: The generation of the grid vertices, and the generation of the grid indices. The vertices can be created simply by stepping along each row and adding them at a spacing equal to the desired cell width [Figure 1]. To calculate the indices, we need to consider vertices on two rows to construct the polygons that make up the grid [Figure 2].
-    <br><br>
+    A heightmap is stored as a simple greyscale image where each pixel represents a height value between 0 and 255. For pixels that are completely black, the height is maximum. For pixels that are completely white, the height is minimum. These values are then projected onto a grid and used to represent the y values. Heightmaps will typically be stored in a .raw file format, but other file extensions could still be valid. We will assume a .raw file format for this tutorial.
+    <br /><br />
     <div class="row" style="text-align: center">
         <div class="col-md-1"></div>
         <div class="col-md-10">
-            <img src="/images/blog/2-2.png" style="max-width: 60%" />
+            <img src="/images/blog/3-1.png" style="max-width: 60%" />
             <br><br>
-            <p style="color: #888888">Figure 1 - A few vertices that make up a simple 1x3 grid.</p>
+            <p style="color: #888888">Figure 1 - An example height map.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <h3>Code</h3>
+    <h4>Generating the Heightmap</h4>
+    Firstly, we need a method that can extract the height map data from our image. For now, let's build a seperate namespace called <code>HeightMapLoader</code> with a function that can extract that data and return a vector of floats.
+    <br/><br/>
+    <div class="code-block">
+<samp>namespace HeightMapLoader
+{
+    std::vector&lt;float&gt; LoadHeightMap(char* fileName, int width, int depth, float scale);
+}</samp>
+    </div>
+    <br/>
+    <div class="code-block">
+<samp>std::vector&lt;float&gt; HeightMapLoader::LoadHeightMap(char* fileName, const int width, const int depth, const float scale)
+{
+    std::vector&lt;unsigned char&gt; pixelData(width * depth);
+
+    std::ifstream heightMapRaw;
+    heightMapRaw.open(fileName, std::ios_base::binary);
+
+    if (heightMapRaw) 
+    {
+        heightMapRaw.read(reinterpret_cast&lt;char*&gt;(&pixelData[0]), static_cast&lt;std::streamsize&gt;(pixelData.size()));
+        heightMapRaw.close();
+    }
+
+    std::vector&lt;float&gt; clampedHeightData(depth * width, 0);
+
+    for (int i = 0; i < width * depth; ++i)
+        clampedHeightData[i] = pixelData[i] / 255.0f * scale;
+
+    return clampedHeightData;
+}</samp>
+    </div>
+    <br /><br />
+    It's worth noting that I intentionally clamp the pixel values down between 0 and 1 to help with scaling later down the line. For example, if I want my terrain to be taller, I can scale the y values by a factor of 10. This is a lot easier to predict and visualise when the values are between 0 and 1.
+    <br/><br/>
+    The next step is to alter the <code>GridBuilder</code> class we developed in the previous tutorial to handle a height map. We will do this by adding three new methods. <code>BuildWithHeightMap(...)</code> and <code>ApplyHeightMapToVertices(...)</code> will deal with the new heightmap loading. The third method, <code>BuildGridGeometry(...)</code> is simply a method to construct the returned Geometry data, added to avoid code duplication between <code>Build(...)</code> and <code>BuildWithHeightMap(...)</code>.
+    <br/><br/>
+    <div class="code-block">
+<samp>Geometry* GridBuilder::BuildWithHeightMap(const Box gridSize, const XMFLOAT2 cellCount, char* heightMapFileName) const
+{
+	std::vector&lt;float&gt; heightMapData = HeightMapLoader::LoadHeightMap(heightMapFileName, cellCount.x, cellCount.y);
+	vector&lt;Vertex&gt; vertices = BuildVertexList(gridSize, cellCount);
+	ApplyHeightMapToVertices(vertices, heightMapData);
+	vector&lt;unsigned long&gt; indices = BuildIndexList(cellCount);
+
+	return BuildGridGeometry(vertices, indices, gridSize);
+}</samp>
+    </div>
+    <br/>
+    <div class="code-block">
+<samp>void GridBuilder::ApplyHeightMapToVertices(std::vector&lt;Vertex&gt;& vertices, std::vector&lt;float&gt;& heightMapData)
+{
+    for (int i = 0; i < vertices.size(); ++i)
+    {
+        if (i > heightMapData.size() - 1)
+            return;
+
+        vertices.at(i).position.y = heightMapData[i];
+    }
+}</samp>
+    </div>
+    <br /><br />
+    For now, I have cheated a little bit by simply returning out of the <code>ApplyHeightMapToVertices(...)</code> method if the array exceeds the <code>heightMapData</code> size. This is because, for a 10x10 grid, we will need 11x11 vertices. So when we request a 512x512 grid to match the height map size, we will have 513 x 513 vertices, causing an vector index out of bounds exception when we attempt to apply height map data that was never created. We will tackle this issue later in the tutorial.
+    <br /><br />
+    I came across an issue when developing this code, where the grid started to break when the cell count was too large. This was to do with the lack of information that could be stored 2 bytes of data, as the index numbers would begin exceeding the maximum possible size. You may remember in the grid tutorial, we constructed the index buffer with a byte width of <code>sizeof(WORD) * static_cast&lt;UINT&gt;(indexCount)</code>. This needs to be changed to a type that is larger than 2 bytes arrays with large index values. In my case, I used <code>LONG</code>, which is 4 bytes. This also required changing the vector array of indices from <code>vector&lt;unsigned short&gt;</code> to <code>vector&lt;unsigned long&gt;</code>. Lastly, with this change, we need to tell DirectX that the input format has changed for the indices, which we do by setting the <code>DXGI_FORMAT</code> to <code>DXGI_FORMAT_R32_UINT</code> (Or equivalent 32 bit value) in <code>IASetIndexBuffer(...)</code>.
+    <br/><br/>
+    <div class="code-block">
+<samp>ID3D11DeviceContext* deviceContext = _direct3D->GetDeviceContext();
+deviceContext->IASetVertexBuffers(0, 1, &appearance->Model->VertexBuffer, &appearance->Model->VBStride, &appearance->Model->VBOffset);
+deviceContext->IASetIndexBuffer(appearance->Model->IndexBuffer, <b>DXGI_FORMAT_R32_UINT</b>, 0);
+deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);</samp>
+    </div>
+    <br /><br />
+    And now, to show the terrain with the heightmap applied [Figure 2].
+    <br /><br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/3-2.png" style="max-width: 60%" />
+            <br><br>
+            <p style="color: #888888">Figure 2 - A height map applied to the scene</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    Unimpressed? Let's try scaling the height by 10... [Figure 3].
+    <br /><br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/3-3.png" style="max-width: 60%" />
+            <br><br>
+            <p style="color: #888888">Figure 3 - A height map applied to the scene with adjusted y values.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <h3>Code</h3>
+    <h4>Normal, Tangent and Binormal Considerations</h4>
+    If your application used any normal, tangent or binormal calculations for graphical techniques such as bump or parallax occlusion mapping, the terrain will break for these techniques [Figure 6]. This is due to all the normals pointing upwards [Figure 4], where they instead need to be pointing perpendicular to each polygon face [Figure 5].
+    <br /><br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-5">
+            <img src="/images/blog/3-4.png" style="max-width: 60%" />
+            <br><br>
+            <p style="color: #888888">Figure 4 - Height map slice with incorrect normals.</p>
+        </div>
+        <div class="col-md-5">
+            <img src="/images/blog/3-5.png" style="max-width: 60%" />
+            <br><br>
+            <p style="color: #888888">Figure 5 - Height map with corrected normals. Note that the red line represent the half way vector between the two normals that would be drawn at each vertex.</p>
         </div>
         <div class="col-md-1"></div>
     </div>
@@ -39,193 +147,25 @@
     <div class="row" style="text-align: center">
         <div class="col-md-1"></div>
         <div class="col-md-10">
-            <img src="/images/blog/2-1.png" style="max-width: 60%" />
+            <img src="/images/blog/3-6.png" style="max-width: 100%" />
             <br><br>
-            <p style="color: #888888">Figure 2 - A simple 1x3 grid where the numbers represent the draw order of the vertices.</p>
+            <p style="color: #888888">Figure 6 - An example of parallax occlusion mapping breaking on the height map terrain.</p>
         </div>
         <div class="col-md-1"></div>
     </div>
-    <br><br>
-    The index list for this grid would be something like this: { 0, 1, 2, 0, 3, 1, 2, 5, 4, 2, 1, 5, 4, 7, 6, 4, 5, 7 } (For an array starting at 0).
     <br /><br />
-    <h3>Code</h3>
-    With the basic theory covered, it's time to implement a grid builder into our application. We will start by creating a class called, conveniently enough, <code>GridBuilder</code>.
-    <br/><br/>
-    <div class="code-block">
-<samp>class GridBuilder
-{
-private:
-    ID3D11Device* _device;
-
-    static vector&lt;Vertex&gt; BuildVertexList(Box gridSize, XMFLOAT2 cellCount);
-    static vector&lt;unsigned short&gt; BuildIndexList(XMFLOAT2 cellCount);
-
-    ID3D11Buffer* CreateVertexBuffer(unsigned long long vertexCount, Vertex* finalVerts) const;
-    ID3D11Buffer* CreateIndexBuffer(int indexCount, unsigned short* indices) const;
-public:
-    GridBuilder(ID3D11Device* device);
-    ~GridBuilder();
-
-    Geometry* Build(Box gridSize, XMFLOAT2 cellCount) const;
-};</samp>
-    </div>
-    <br/>
-    The <code>Box</code> class being passed into some of the methods is simply a data transfer object containing a width and height. We have a few things of note here. Firstly, the class uses a tiny bit of dependency injection by holding a reference to the <code>ID3D11Device</code>, passed into the constructor at initialisation. Then, we have the main <code>Build(...)</code> method, which takes a grid size and cell count as parameters.
-    <br/><br/>
-    We also have some helper methods to assist us and make our code a little cleaner, which are the private <code>BuildVertexList(...)</code>, <code>BuildIndexList(...)</code>, <code>CreateVertexBuffer(...)</code> and <code>CreateIndexBuffer(...)</code>. Their jobs should be fairly self-explanitory, but the logic inside each method will be explained in detail shortly.
-    <br/><br/>
-    <h4>Constructing the Vertices</h4>
-    First, let's look at the <code>BuildVertexList(...)</code> method.
-    <br/><br/>
-    <div class="code-block">
-<samp>vector&lt;Vertex&gt; GridBuilder::BuildVertexList(const Box gridSize, const XMFLOAT2 cellCount)
-{
-    const int halfWidth = gridSize.Width / 2;
-    const int halfDepth = gridSize.Height / 2;
-    const XMFLOAT2 cellSize = XMFLOAT2(gridSize.Width / cellCount.x, gridSize.Height / cellCount.y);
-
-    vector&lt;Vertex&gt; vertices = vector&lt;Vertex&gt;();
-    for (int row = 0; row <= cellCount.x; row++)
-    {
-        for (int column = 0; column <= cellCount.y; column++)
-        {
-            Vertex vertex;
-            vertex.position = XMFLOAT3(column * cellSize.x - halfWidth, 0, row * cellSize.y - halfDepth);
-            vertex.texture = XMFLOAT2(row * (cellCount.x / gridSize.Width), column * (cellCount.y / gridSize.Height));
-            vertex.normal = XMFLOAT3(0, 1, 0);
-            vertex.tangent = XMFLOAT3(0, 0, 1);
-            vertex.binormal = XMFLOAT3(1, 0, 0);
-            vertices.push_back(vertex);
-        }
-    }
-
-    return vertices;
-}</samp>
-    </div>
-    <br/>
-    The important part of this method is the calculation of the position and texture coordinates for each vertex. But before we do that, note the first three lines. The first two lines will find half the width and depth, which is used later so that the center of the grid in centered at local coordinates (0, 0). This third line will determine the cell spacing between vertices. 
-    <br/><br/>
-    We then generate an amount of vertices equal to the <code>(cellCount.x + 1) * (cellCount.y + 1)</code>, which is done via the nested for loops. For each vertex, we calculate it's position using the following formula:
-    <br /><br />
-    <div style="text-align: center">
-        <code>XMFLOAT3(column * cellSize.x - halfWidth, 0, row * cellSize.y - halfDepth)</code>
-    </div>
-    <br/>
-    We can see how this code constructs the vertices with the following gif [Figure 3]
+    To remedy this, we need to calculate the tangents and binormals then recalculate the normals for each vertex. Code for this can be found at Rastertek, if you wish to consult his <a href="http://rastertek.com/dx11tut20.html">Bump Mapping</a> tutorial for the code. Once sorting out the tangets, binormals and normals, parallax occlusion and bump mapping should work a lot better on the terrain.
     <br /><br />
     <div class="row" style="text-align: center">
         <div class="col-md-1"></div>
         <div class="col-md-10">
-            <img src="/images/blog/2-3.gif" style="max-width: 80%" />
-            <br>
-            <p style="color: #888888">Figure 3 - Gif explaining how the code constructs each vertex.</p>
+            <img src="/images/blog/3-7.png" style="max-width: 100%" />
+            <br><br>
+            <p style="color: #888888">Figure 7 - Terrain with the fixed binormals, tangent and normals.</p>
         </div>
         <div class="col-md-1"></div>
     </div>
-    <br><br>
-    The texture coordinate code ensures that the entire grid contains texture coordinates between 0 and 1, which is calculated using the provided cell count and grid size.
-    <br /><br />
-    <div style="text-align: center">
-        <code>XMFLOAT2(row * (cellCount.x / gridSize.Width), column * (cellCount.y / gridSize.Height))</code>
-    </div>
-    <br /><br />
-    <h4>Constructing the Indices</h4>
-    Constructing the indices is a slightly different beast, but is fairly simple if we approach it in the correct way. First, let's look at the code in <code>BuildIndexList(...)</code>:
-    <br/><br/>
-    <div class="code-block">
-<samp>vector&lt;unsigned short&gt; GridBuilder::BuildIndexList(const XMFLOAT2 cellCount)
-{
-    vector&lt;unsigned short&gt; indices = vector&lt;unsigned short&gt;();
-    for (int row = 0; row < cellCount.x; row++)
-    {
-        for (int column = 0; column < cellCount.y; column++)
-        {
-            unsigned short topLeftIndex = row * (cellCount.y + 1) + column;
-            unsigned short topRightIndex = topLeftIndex + 1;
-            unsigned short bottomLeftIndex = topLeftIndex + cellCount.y + 1;
-            unsigned short bottomRightIndex = topLeftIndex + cellCount.y + 2;
-
-            indices.push_back(topLeftIndex);
-            indices.push_back(bottomRightIndex);
-            indices.push_back(topRightIndex);
-            indices.push_back(topLeftIndex);
-            indices.push_back(bottomLeftIndex);
-            indices.push_back(bottomRightIndex);
-        }
-    }
-
-    return indices;
-}</samp>
-    </div>
-    <br/>
-    This code will go through each square in each row of the grid, and get the index for that vertex. Because the vertices on a higher row will have much higher indexes, we need to add the cellCount to the index to move us up to the next row. Once this has been done, we can push 6 indices to the index list that represent the two polygon faces making up the square.
-    <br/><br/>
-    <b>NOTE: This is the part where it is important to consider that DirectX uses a left-handed coordinate system. Make sure that you are drawing these polygon faces in a counter-clockwise direction, otherwise you are going to end up with some weird issues later down the line.</b>
-    <br /><br />
-    <h4>Preparing the Buffers for DirectX</h4>
-    If you are familiar with any object loading in DirectX, you should know that the vertex and index buffers need to be pushed into an object of type <code>ID3D11Buffer</code> to later get passed to the GPU. The last two helper methods, <code>CreateVertexBuffer(...)</code> and <code>CreateIndexBuffer(...)</code> do exactly this, and should be quite familiar to you.
-    <br/><br/>
-    <div class="code-block">
-<samp>ID3D11Buffer* GridBuilder::CreateVertexBuffer(const unsigned long long vertexCount, Vertex* finalVerts) const
-{
-    D3D11_BUFFER_DESC bd;
-    ZeroMemory(&bd, sizeof(bd));
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(Vertex) * static_cast&lt;UINT&gt;(vertexCount);
-    bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    bd.CPUAccessFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA InitData;
-    ZeroMemory(&InitData, sizeof(InitData));
-    InitData.pSysMem = finalVerts;
-
-    ID3D11Buffer* vertexBuffer;
-    _device->CreateBuffer(&bd, &InitData, &vertexBuffer);
-    return vertexBuffer;
-}
-
-ID3D11Buffer* GridBuilder::CreateIndexBuffer(const int indexCount, unsigned short* indices) const
-{
-    D3D11_BUFFER_DESC bd;
-    ZeroMemory(&bd, sizeof(bd));
-    bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(WORD) * static_cast&lt;UINT&gt;(indexCount);
-    bd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-    bd.CPUAccessFlags = 0;
-
-    D3D11_SUBRESOURCE_DATA InitData;
-    ZeroMemory(&InitData, sizeof(InitData));
-    InitData.pSysMem = indices;
-
-    ID3D11Buffer* indexBuffer;
-    _device->CreateBuffer(&bd, &InitData, &indexBuffer);
-    return indexBuffer;
-}</samp>
-    </div>
-    <br/>
-    The only thing left to do is to call all these methods in the right order and pass the geometry data back to the code that requested it! This call would be made to the publically avaliable <code>Build(...)</code> method by passing it the desired grid size and cell count. Then, slap on a texture and draw the grid, and it should look something like Figure 4 & 5.
-    <br /><br />
-    <div class="row" style="text-align: center">
-        <div class="col-md-1"></div>
-        <div class="col-md-10">
-            <img src="/images/blog/2-4.png" style="max-width: 80%" />
-            <br>
-            <p style="color: #888888">Figure 4 - 10x10 cell grid with 100x100 size.</p>
-        </div>
-        <div class="col-md-1"></div>
-    </div>
-    <br/>
-    <div class="row" style="text-align: center">
-        <div class="col-md-1"></div>
-        <div class="col-md-10">
-            <img src="/images/blog/2-5.png" style="max-width: 80%" />
-            <br>
-            <p style="color: #888888">Figure 5 - 10x10 cell grid with 100x100 size.</p>
-        </div>
-        <div class="col-md-1"></div>
-    </div>
-    <br/>
-    In the next tutorial, we will investigate how to manipulate the y values on this grid using a height map.
+    <br />
 </div>
 
 @Html.Partial("MainFooter")
