@@ -30,7 +30,7 @@ There are many ways to create terrain in games programming. One method is to use
         <div class="col-md-1"></div>
     </div>
     <h3>Code</h3>
-    <h4>Generating the Heightmap</h4>
+    <h4>Sampling the Heightmap</h4>
     Firstly, we need a method that can extract the height map data from our image. For now, let's build a seperate namespace called <code>HeightMapLoader</code> with a function that can extract that data and return a vector of floats.
     <br/><br/>
     <div class="code-block">
@@ -125,7 +125,7 @@ deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);</s
         </div>
         <div class="col-md-1"></div>
     </div>
-    <h3>Code</h3>
+    <h3>Extra Work</h3>
     <h4>Normal, Tangent and Binormal Considerations</h4>
     If your application used any normal, tangent or binormal calculations for graphical techniques such as bump or parallax occlusion mapping, the terrain will break for these techniques [Figure 6]. This is due to all the normals pointing upwards [Figure 4], where they instead need to be pointing perpendicular to each polygon face [Figure 5].
     <br /><br />
@@ -166,6 +166,114 @@ deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);</s
         <div class="col-md-1"></div>
     </div>
     <br />
+    <h4>Grid Map Interpolation</h4>
+    We previously discussed an issue where we have one more row and column of vertices than we do height map data. A potential fix to this would be to simply change that the <code>cellCount</code> represents the amount of vertices, rather than the amount of cells. This is particularly... unexciting. Let's do grid interpolation instead!
+    <br/><br/>
+    The concept behind this technique is quite a bit simpler that the implementation. It involves mapping the grid provided by the application onto the heightmap, then samples each nearby pixel on the heightmap with a weighting to each one depending on its distance [Figure 8]. These final pixel values are then interpolated to give the final height value for that vertex on the grid.
+    <br /><br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/3-8.gif" style="max-width: 100%" />
+            <br><br>
+            <p style="color: #888888">Figure 8 - Interpolation on the top row of a grid. Lower rows are more complex to calculate as more pixels need to be sampled across rows.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br /><br/>
+    I'm sure the following code can be refactored and simplified somewhat, but here is the Interpolation code for each row. The column interpolation is very simular to this, only it operates on the pixels in a single row. I have excluded it to save space while also giving you something to think about.
+    <br/><br/>
+    <div class="code-block">
+<samp>std::vector&lt;float&gt; InterpolateHeightMap(std::vector&lt;float&gt;& pixelData, const DirectX::XMFLOAT2& cellCount, const Box& heightMapSize)
+{
+	std::vector&lt;float&gt; interpolatedHeightData;
+
+	for (int row = 0; row &lt; cellCount.y; ++row)
+	{
+		float heightPosition = (heightMapSize.Height / (cellCount.y + 1)) * row;
+
+		if (heightPosition &lt; 1)
+		{
+			int rowOneIndex = static_cast&lt;int&gt;(round((heightMapSize.Height / (cellCount.y + 1)) * row)) * heightMapSize.Width;
+			int rowTwoIndex = static_cast&lt;int&gt;(round((heightMapSize.Height / (cellCount.y + 1)) * (row + 1))) * heightMapSize.Width;
+
+			vector&lt;float&gt; rowOne = InterpolateHeightMapRow(pixelData, cellCount, heightMapSize, rowOneIndex);
+			vector&lt;float&gt; rowTwo;
+
+			if (rowOneIndex == rowTwoIndex)
+				rowTwo = rowOne;
+			else
+				rowTwo = InterpolateHeightMapRow(pixelData, cellCount, heightMapSize, rowTwoIndex);
+
+			for (int column = 0; column &lt; rowOne.size(); ++column)
+				interpolatedHeightData.push_back(((rowOne.at(column) * (2 - heightPosition)) + (rowTwo.at(column) * heightPosition)) / 2);
+		}
+		else if (heightPosition &gt; heightMapSize.Height - 1)
+		{
+			int rowOneIndex = static_cast&lt;int&gt;(round((heightMapSize.Height / (cellCount.y + 1)) * (row - 1))) * heightMapSize.Width;
+			int rowTwoIndex = static_cast&lt;int&gt;(round((heightMapSize.Height / (cellCount.y + 1)) * row)) * heightMapSize.Width;
+
+			vector&lt;float&gt; rowOne = InterpolateHeightMapRow(pixelData, cellCount, heightMapSize, rowOneIndex);
+			vector&lt;float&gt; rowTwo;
+
+			if (rowOneIndex == rowTwoIndex)
+				rowTwo = rowOne;
+			else
+				rowTwo = InterpolateHeightMapRow(pixelData, cellCount, heightMapSize, rowTwoIndex);
+
+			for (int column = 0; column &lt; rowOne.size(); ++column)
+				interpolatedHeightData.push_back(((rowOne.at(column) * (2 - heightPosition)) + (rowTwo.at(column) * heightPosition)) / 2);
+		}
+		else
+		{
+			int rowOneIndex = static_cast&lt;int&gt;(round((heightMapSize.Height / (cellCount.y + 1)) * (row - 1))) * heightMapSize.Width;
+			int rowTwoIndex = static_cast&lt;int&gt;(round((heightMapSize.Height / (cellCount.y + 1)) * row)) * heightMapSize.Width;
+			int rowThreeIndex = static_cast&lt;int&gt;(round((heightMapSize.Height / (cellCount.y + 1)) * (row + 1))) * heightMapSize.Width;
+
+			vector&lt;float&gt; rowOne = InterpolateHeightMapRow(pixelData, cellCount, heightMapSize, rowOneIndex);
+			vector&lt;float&gt; rowTwo;
+			vector&lt;float&gt; rowThree;
+
+			if (rowOneIndex == rowTwoIndex)
+				rowTwo = rowOne;
+			else
+				rowTwo = InterpolateHeightMapRow(pixelData, cellCount, heightMapSize, rowTwoIndex);
+
+			if (rowTwoIndex == rowThreeIndex)
+				rowThree = rowTwo;
+			else
+				rowThree = InterpolateHeightMapRow(pixelData, cellCount, heightMapSize, rowThreeIndex);
+
+			const float percentageShare = heightPosition - floor(heightPosition);
+			for (int column = 0; column &lt; rowOne.size(); ++column)
+				interpolatedHeightData.push_back(((rowOne.at(column) * (1 - percentageShare)) + rowTwo.at(column) + (rowThree.at(column) * percentageShare)) / 2);
+		}
+	}
+
+	return interpolatedHeightData;
+}</samp>
+    </div>
+    <br /><br />
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/3-9.png" style="max-width: 100%" />
+            <br><br>
+            <p style="color: #888888">Figure 9 - 512x512 Heightmap interpolated onto 100x100 grid.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
+    <br />
+    
+    <div class="row" style="text-align: center">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <img src="/images/blog/3-10.png" style="max-width: 100%" />
+            <br><br>
+            <p style="color: #888888">Figure 10 - 512x512 Heightmap interpolated onto 789x789 grid.</p>
+        </div>
+        <div class="col-md-1"></div>
+    </div>
 </div>
 
 @Html.Partial("MainFooter")
