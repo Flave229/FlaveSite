@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using FlaveSite.Core.Projects.Records;
+using System.Linq;
 
 namespace FlaveSite.Core.Projects
 {
@@ -25,7 +26,9 @@ namespace FlaveSite.Core.Projects
 
         public ProjectRecord GetProjectDetails(int projectId)
         {
-            return _repository.GetProjectDetails(projectId);
+            ProjectRecord projectRecord = _repository.GetProjectDetails(projectId);
+            projectRecord.AdditionalMembers = projectRecord.AdditionalMembers.OrderBy(x => x.Name).ToList();
+            return projectRecord;
         }
     }
 
